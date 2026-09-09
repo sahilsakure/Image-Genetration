@@ -1,0 +1,397 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="studio-layout">
+    <!-- Left Workspace: Generation Studio Controls -->
+    <section class="studio-panel" id="studioPanel" aria-label="Image Generation Controls">
+        <div class="panel-header">
+            <div class="panel-heading">
+                <h1 class="panel-title">Studio Canvas</h1>
+                <p class="panel-subtitle">Transform concepts into ultra-high-definition artwork with neural precision.</p>
+            </div>
+            <button type="button" class="btn-surprise" id="surprisePromptBtn" title="Inject an expertly crafted prompt">
+                <i data-lucide="dices"></i>
+                <span>Surprise Me</span>
+            </button>
+        </div>
+
+        <form id="generationForm" class="generation-form" onsubmit="return false;">
+            <!-- Prompt Input Field -->
+            <div class="form-group prompt-group">
+                <div class="label-row">
+                    <label for="promptInput" class="form-label">
+                        <i data-lucide="sparkle"></i>
+                        <span>Creative Prompt</span>
+                    </label>
+                    <div class="prompt-meta-actions">
+                        <span class="char-counter" id="charCounter">0 / 1000</span>
+                        <button type="button" class="btn-icon-subtle" id="clearPromptBtn" title="Clear prompt" aria-label="Clear prompt text">
+                            <i data-lucide="x"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="textarea-wrapper">
+                    <textarea 
+                        id="promptInput" 
+                        class="prompt-textarea" 
+                        placeholder="Describe your visual imagination in vivid detail... (e.g., A celestial observatory carved inside an emerald meteor, volumetric cosmic rays, 8k)" 
+                        maxlength="1000" 
+                        rows="3"
+                        required
+                    ></textarea>
+                </div>
+                <div class="prompt-hint-bar">
+                    <span class="shortcut-tip"><kbd>Ctrl</kbd> + <kbd>Enter</kbd> to generate instantly</span>
+                </div>
+            </div>
+
+            <!-- Style Selector Pills -->
+            <div class="form-group">
+                <div class="label-row">
+                    <label class="form-label">
+                        <i data-lucide="palette"></i>
+                        <span>Aesthetic Style Preset</span>
+                    </label>
+                    <span class="active-style-label" id="activeStyleIndicator">Photorealistic</span>
+                </div>
+                <div class="style-pills-grid" id="stylePillsContainer" role="radiogroup" aria-label="Aesthetic Style">
+                    {% for style_name in styles %}
+                    <button 
+                        type="button" 
+                        class="style-pill {% if style_name == 'Photorealistic' %}active{% endif %}" 
+                        data-style="{{ style_name }}"
+                        role="radio"
+                        aria-checked="{% if style_name == 'Photorealistic' %}true{% else %}false{% endif %}"
+                    >
+                        <span class="pill-dot"></span>
+                        <span class="pill-name">{{ style_name }}</span>
+                    </button>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Aspect Ratio Selector -->
+            <div class="form-group">
+                <div class="label-row">
+                    <label class="form-label">
+                        <i data-lucide="proportions"></i>
+                        <span>Canvas Dimensions</span>
+                    </label>
+                    <span class="active-ratio-label" id="activeRatioIndicator">1024 × 1024 (1:1)</span>
+                </div>
+                <div class="ratio-toggles-grid" id="ratioTogglesContainer" role="radiogroup" aria-label="Aspect Ratio">
+                    <button type="button" class="ratio-btn active" data-ratio="1:1" role="radio" aria-checked="true" title="Square - 1024x1024">
+                        <div class="ratio-preview square-preview"></div>
+                        <span class="ratio-name">1:1</span>
+                        <span class="ratio-desc">Square</span>
+                    </button>
+                    <button type="button" class="ratio-btn" data-ratio="16:9" role="radio" aria-checked="false" title="Landscape - 1280x720">
+                        <div class="ratio-preview landscape-preview"></div>
+                        <span class="ratio-name">16:9</span>
+                        <span class="ratio-desc">Landscape</span>
+                    </button>
+                    <button type="button" class="ratio-btn" data-ratio="9:16" role="radio" aria-checked="false" title="Portrait - 720x1280">
+                        <div class="ratio-preview portrait-preview"></div>
+                        <span class="ratio-name">9:16</span>
+                        <span class="ratio-desc">Portrait</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Advanced Parameters Collapsible -->
+            <details class="advanced-details" id="advancedDetails">
+                <summary class="advanced-summary">
+                    <div class="summary-content">
+                        <i data-lucide="sliders"></i>
+                        <span>Advanced Pipeline Options</span>
+                    </div>
+                    <i data-lucide="chevron-down" class="chevron-icon"></i>
+                </summary>
+                <div class="advanced-panel">
+                    <div class="form-group">
+                        <label for="negativePromptInput" class="form-label">
+                            <i data-lucide="shield-alert"></i>
+                            <span>Negative Prompt (Exclude)</span>
+                        </label>
+                        <input 
+                            type="text" 
+                            id="negativePromptInput" 
+                            class="text-input" 
+                            placeholder="blur, disfigured, low resolution, deformed limbs, watermark, bad anatomy"
+                        >
+                    </div>
+
+                    <div class="form-group">
+                        <div class="label-row">
+                            <label for="seedInput" class="form-label">
+                                <i data-lucide="hash"></i>
+                                <span>Seed (Random or Custom)</span>
+                            </label>
+                            <button type="button" class="btn-link" id="randomSeedBtn">
+                                <i data-lucide="shuffle"></i>
+                                <span>Randomize</span>
+                            </button>
+                        </div>
+                        <input 
+                            type="number" 
+                            id="seedInput" 
+                            class="text-input" 
+                            placeholder="Leave blank for random unique generation"
+                        >
+                    </div>
+                </div>
+            </details>
+
+            <!-- Main Generation Button -->
+            <div class="submit-container">
+                <button type="button" class="btn-generate" id="generateBtn">
+                    <span class="btn-shimmer"></span>
+                    <div class="btn-content">
+                        <i data-lucide="wand-sparkles" class="btn-icon"></i>
+                        <span class="btn-text" id="generateBtnText">Generate Artwork</span>
+                    </div>
+                </button>
+                <p class="free-pipeline-note">
+                    <i data-lucide="check-circle-2"></i>
+                    <span>Free, unmetered AI inference via Pollinations Flux. No subscription required.</span>
+                </p>
+            </div>
+        </form>
+    </section>
+
+    <!-- Right Workspace: Interactive Preview & Viewport -->
+    <section class="preview-panel" id="previewPanel" aria-label="Interactive Canvas Preview">
+        <div class="panel-header preview-header">
+            <div class="panel-heading">
+                <h2 class="panel-title">Viewport</h2>
+                <span class="preview-status" id="previewStatusBadge">Standby</span>
+            </div>
+            
+            <!-- Quick Action Toolbar (visible when image exists) -->
+            <div class="preview-actions-bar" id="previewActionsBar" style="display: none;">
+                <button type="button" class="action-pill-btn" id="copyPromptBtn" title="Copy enhanced prompt to clipboard">
+                    <i data-lucide="copy"></i>
+                    <span>Copy Prompt</span>
+                </button>
+                <button type="button" class="action-pill-btn" id="zoomImageBtn" title="Full-screen Lightbox Zoom">
+                    <i data-lucide="maximize-2"></i>
+                    <span>Zoom</span>
+                </button>
+                <button type="button" class="action-pill-btn primary" id="downloadImageBtn" title="Download High-Res PNG">
+                    <i data-lucide="download"></i>
+                    <span>Download</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Preview Stage Viewport Container -->
+        <div class="preview-stage-container" id="previewStageContainer">
+            <!-- Empty Placeholder Canvas -->
+            <div class="canvas-empty-state" id="emptyPreviewState">
+                <div class="empty-graphic-wrapper">
+                    <div class="hologram-ring ring-outer"></div>
+                    <div class="hologram-ring ring-middle"></div>
+                    <div class="hologram-symbol">
+                        <i data-lucide="image"></i>
+                    </div>
+                </div>
+                <h3 class="empty-title">Ready for Your Vision</h3>
+                <p class="empty-desc">Select an aesthetic style, enter your prompt, or click "Surprise Me" to create original art.</p>
+                <div class="empty-quick-tags">
+                    <span class="quick-tag" data-tag="Cyberpunk neon city">Cyberpunk</span>
+                    <span class="quick-tag" data-tag="Ethereal fantasy landscape">Fantasy Realm</span>
+                    <span class="quick-tag" data-tag="Studio portrait volumetric lighting">Studio Portrait</span>
+                </div>
+            </div>
+
+            <!-- Shimmer Skeleton Loading State -->
+            <div class="skeleton-loading-state" id="skeletonLoader" style="display: none;">
+                <div class="skeleton-shimmer-box">
+                    <div class="shimmer-wave"></div>
+                    <div class="loading-content-overlay">
+                        <div class="neural-spinner">
+                            <div class="spinner-core"></div>
+                        </div>
+                        <h4 class="loading-step-title" id="progressStatusText">Crafting neural canvas...</h4>
+                        <p class="loading-step-sub" id="progressSubText">Sampling diffusion steps with Flux engine</p>
+                        <div class="progress-bar-track">
+                            <div class="progress-bar-fill" id="progressBarFill"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Rendered Finished Image Container -->
+            <div class="rendered-image-wrapper" id="renderedImageWrapper" style="display: none;">
+                <img 
+                    id="renderedImage" 
+                    src="" 
+                    alt="AI Generated Artwork" 
+                    class="rendered-img"
+                    loading="lazy"
+                >
+                <div class="image-overlay-controls">
+                    <span class="resolution-badge" id="previewResolutionBadge">1024 × 1024</span>
+                    <div class="overlay-buttons">
+                        <button type="button" class="btn-overlay-circle" id="overlayZoomBtn" title="Zoom full screen">
+                            <i data-lucide="zoom-in"></i>
+                        </button>
+                        <button type="button" class="btn-overlay-circle" id="overlayDownloadBtn" title="Download PNG">
+                            <i data-lucide="download"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Rendered Artwork Metadata Inspector Footer -->
+        <div class="rendered-meta-card" id="renderedMetaCard" style="display: none;">
+            <div class="meta-row">
+                <div class="meta-item">
+                    <span class="meta-label">Style</span>
+                    <span class="meta-val" id="metaStyleValue">Photorealistic</span>
+                </div>
+                <div class="meta-item">
+                    <span class="meta-label">Ratio</span>
+                    <span class="meta-val" id="metaRatioValue">1:1</span>
+                </div>
+                <div class="meta-item">
+                    <span class="meta-label">Seed</span>
+                    <span class="meta-val font-mono" id="metaSeedValue">--</span>
+                </div>
+                <div class="meta-item">
+                    <span class="meta-label">Created</span>
+                    <span class="meta-val" id="metaDateValue">Just now</span>
+                </div>
+            </div>
+            <div class="meta-prompt-text" id="metaPromptValue"></div>
+        </div>
+    </section>
+</div>
+
+<!-- Slide-Out Persistent History Gallery Drawer -->
+<aside class="gallery-drawer" id="galleryDrawer" aria-label="Creation History Drawer" aria-hidden="true">
+    <div class="drawer-backdrop" id="drawerBackdrop"></div>
+    <div class="drawer-content">
+        <div class="drawer-header">
+            <div class="drawer-heading">
+                <div class="drawer-title-row">
+                    <i data-lucide="library"></i>
+                    <h2 class="drawer-title">Creation History</h2>
+                </div>
+                <span class="drawer-count-badge" id="galleryTotalBadge">0 artworks</span>
+            </div>
+            <button type="button" class="btn-close-drawer" id="closeDrawerBtn" aria-label="Close Gallery Drawer">
+                <i data-lucide="x"></i>
+            </button>
+        </div>
+
+        <!-- Live Search and Filter Bar -->
+        <div class="gallery-filter-bar">
+            <div class="search-input-wrapper">
+                <i data-lucide="search" class="search-icon"></i>
+                <input 
+                    type="text" 
+                    id="gallerySearchInput" 
+                    class="gallery-search-input" 
+                    placeholder="Search by prompt keyword..."
+                    autocomplete="off"
+                >
+                <button type="button" class="clear-search-btn" id="clearSearchBtn" style="display: none;" title="Clear search">
+                    <i data-lucide="x"></i>
+                </button>
+            </div>
+            
+            <div class="filter-pills-scroll">
+                <button type="button" class="filter-pill active" data-filter="all">All</button>
+                {% for style_name in styles %}
+                <button type="button" class="filter-pill" data-filter="{{ style_name }}">{{ style_name }}</button>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Gallery Grid -->
+        <div class="gallery-cards-grid" id="galleryCardsGrid">
+            <!-- Initial server-rendered records for instant hydration -->
+            {% for item in initial_records %}
+            <article class="gallery-card" data-id="{{ item.id }}" data-style="{{ item.style }}" data-prompt="{{ item.prompt | e }}">
+                <div class="card-media-wrapper">
+                    <img src="{{ item.image_url }}" alt="{{ item.prompt | e }}" class="card-thumbnail" loading="lazy">
+                    <span class="card-style-badge">{{ item.style }}</span>
+                    <span class="card-ratio-badge">{{ item.aspect_ratio }}</span>
+                    
+                    <div class="card-hover-actions">
+                        <button type="button" class="card-btn-action btn-card-zoom" title="Zoom full screen" data-id="{{ item.id }}">
+                            <i data-lucide="maximize-2"></i>
+                        </button>
+                        <button type="button" class="card-btn-action btn-card-reuse" title="Reuse prompt in studio" data-id="{{ item.id }}">
+                            <i data-lucide="rotate-ccw"></i>
+                        </button>
+                        <a href="/api/download/{{ item.id }}" class="card-btn-action btn-card-download" title="Download PNG" download>
+                            <i data-lucide="download"></i>
+                        </a>
+                        <button type="button" class="card-btn-action btn-card-delete danger" title="Delete from history" data-id="{{ item.id }}">
+                            <i data-lucide="trash-2"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <p class="card-prompt" title="{{ item.prompt | e }}">{{ item.prompt }}</p>
+                    <div class="card-footer">
+                        <span class="card-date">{{ item.formatted_date }}</span>
+                    </div>
+                </div>
+            </article>
+            {% endfor %}
+        </div>
+
+        <!-- Empty Search Result State -->
+        <div class="gallery-empty-state" id="galleryEmptyState" style="{% if initial_records %}display: none;{% endif %}">
+            <div class="empty-icon-box">
+                <i data-lucide="images"></i>
+            </div>
+            <h4 class="empty-state-title">No artworks found</h4>
+            <p class="empty-state-text">Your generated artworks will be automatically saved here.</p>
+        </div>
+    </div>
+</aside>
+
+<!-- Fullscreen Zoom Lightbox Modal -->
+<div class="zoom-modal" id="zoomModal" role="dialog" aria-modal="true" aria-hidden="true">
+    <div class="modal-backdrop" id="modalBackdrop"></div>
+    <div class="modal-dialog">
+        <div class="modal-header">
+            <div class="modal-title-group">
+                <span class="modal-badge" id="modalStyleBadge">Photorealistic</span>
+                <span class="modal-timestamp" id="modalTimestamp">--</span>
+            </div>
+            <div class="modal-controls">
+                <button type="button" class="btn-modal-action" id="modalCopyBtn" title="Copy full prompt">
+                    <i data-lucide="copy"></i>
+                    <span>Copy Prompt</span>
+                </button>
+                <button type="button" class="btn-modal-action primary" id="modalDownloadBtn" title="Download PNG">
+                    <i data-lucide="download"></i>
+                    <span>Download</span>
+                </button>
+                <button type="button" class="btn-modal-close" id="closeModalBtn" aria-label="Close modal">
+                    <i data-lucide="x"></i>
+                </button>
+            </div>
+        </div>
+        <div class="modal-body">
+            <div class="modal-image-stage">
+                <img id="modalImage" src="" alt="Full-resolution AI artwork" class="modal-display-img">
+            </div>
+            <div class="modal-caption-panel">
+                <h4 class="caption-heading">Prompt Details</h4>
+                <p class="caption-text" id="modalPromptText"></p>
+                <div class="caption-meta-chips" id="modalMetaChips">
+                    <span class="chip font-mono" id="modalDimensionsChip">1024 × 1024</span>
+                    <span class="chip font-mono" id="modalSeedChip">Seed: --</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

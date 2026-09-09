@@ -1,0 +1,17 @@
+[
+  {
+    "id": 1,
+    "prompt": "A tiny glowing blue humming bird hovering near an orchid",
+    "enhanced_prompt": "A tiny glowing blue humming bird hovering near an orchid, photorealistic, highly detailed 8k photography, hyperrealistic, studio lighting, canon eos r5, award-winning shot, sharp focus, natural depth of field",
+    "negative_prompt": "",
+    "style": "Photorealistic",
+    "aspect_ratio": "1:1",
+    "width": 1024,
+    "height": 1024,
+    "seed": 444113963,
+    "image_filename": "sqrock-gen-2026-09-09T12-58-50-3536.png",
+    "image_url": "/generated/sqrock-gen-2026-09-09T12-58-50-3536.png",
+    "created_at": "2026-09-09T12:58:50.752Z",
+    "formatted_date": "Sep 9, 2026 • 12:58"
+  }
+]

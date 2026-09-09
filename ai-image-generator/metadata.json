@@ -1,0 +1,6 @@
+{
+  "name": "AI Image Generator",
+  "description": "Production-grade AI image generator studio powered by Pollinations AI with style presets, aspect ratio controls, history gallery, and downloads.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

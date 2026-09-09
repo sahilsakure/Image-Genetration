@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}AI Image Generator Studio | Elite Neural Canvas{% endblock %}</title>
+    <meta name="description" content="Production-grade AI image generator studio powered by Pollinations AI and Python Flask.">
+    
+    <!-- Design Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    
+    <!-- Lucide Icons via unpkg -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <!-- Core Application CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    {% block extra_head %}{% endblock %}
+</head>
+<body class="theme-dark">
+    <!-- Background Ambient Mesh -->
+    <div class="ambient-mesh" aria-hidden="true">
+        <div class="ambient-orb orb-1"></div>
+        <div class="ambient-orb orb-2"></div>
+        <div class="ambient-orb orb-3"></div>
+    </div>
+
+    <!-- Top Navigation Bar -->
+    <header class="app-header" id="appHeader">
+        <div class="header-container">
+            <div class="brand-group">
+                <div class="brand-symbol" id="brandLogo">
+                    <i data-lucide="sparkles"></i>
+                </div>
+                <div class="brand-text">
+                    <span class="brand-title">Lumina AI</span>
+                    <span class="brand-badge">Flux v2.4 • Studio</span>
+                </div>
+            </div>
+
+            <div class="header-actions">
+                <!-- Gallery Drawer Trigger -->
+                <button type="button" class="btn-ghost" id="galleryToggleBtn" title="Open Creations Gallery" aria-label="Toggle Gallery Drawer">
+                    <i data-lucide="layout-grid"></i>
+                    <span class="btn-label">Creations</span>
+                    <span class="badge-counter" id="headerGalleryCount">0</span>
+                </button>
+
+                <!-- Engine Status Indicator -->
+                <div class="engine-status" id="engineStatusIndicator" title="Pollinations Engine Active">
+                    <span class="status-pulse"></span>
+                    <span class="status-text">Online & Ready</span>
+                </div>
+
+                <!-- Dark / Light Theme Toggle -->
+                <button type="button" class="theme-toggle-btn" id="themeToggleBtn" title="Toggle Dark / Light Theme" aria-label="Toggle Color Theme">
+                    <i data-lucide="sun" class="sun-icon"></i>
+                    <i data-lucide="moon" class="moon-icon"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="app-main" id="appMain">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Global Toast Notification Container -->
+    <div class="toast-container" id="toastContainer" role="region" aria-live="polite" aria-label="Notifications"></div>
+
+    <!-- Application JavaScript -->
+    <script src="{{ url_for('static', filename='js/gallery.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+    {% block extra_scripts %}{% endblock %}
+</body>
+</html>
